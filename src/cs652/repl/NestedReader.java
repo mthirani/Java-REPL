@@ -16,6 +16,9 @@ public class NestedReader {
         this.input = input;
     }
 
+    /*
+        This method checks for the valid character inputted from the user and appends it to the string
+     */
     public String getNestedString() throws IOException {
         buf = new StringBuilder();
         Stack<Character> inputChars = new Stack<Character>();
@@ -82,6 +85,9 @@ public class NestedReader {
         }
     }
 
+    /*
+        This method handles the closing brackets and quotations which appends all the characters from now on to the string
+     */
     public void appendAllChars(char c) throws IOException{
         while(c != '\n') {
             if(c == '/'){
@@ -97,6 +103,9 @@ public class NestedReader {
         }
     }
 
+    /*
+        This method ignores all the characters inputted from now on until a new line has been observed, mainly used for ignoring comments
+     */
     public void ignoreAllChars(char c) throws IOException{
         while(c != '\n') {
             c = (char )input.read();

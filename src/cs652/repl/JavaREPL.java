@@ -10,22 +10,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-class HandlingCompilerOperations {
-    DiagnosticCollector dg;
-    JavacTask javaTask;
-    public HandlingCompilerOperations(DiagnosticCollector d, JavacTask jT){
-        dg = d;
-        javaTask = jT;
-    }
-}
 public class JavaREPL {
 
     public static final String tempDir = System.getProperty("java.io.tmpdir");
 
+    /*
+        This is the main method
+     */
     public static void main(String[] args) throws IOException {
         exec(new InputStreamReader(System.in));
     }
 
+    /*
+        This method reads each and every line inputted by the user and performs the execution of statement accordingly
+        Each statement (if valid)  is converted to java source code and stored in the file else storing the blank java source file
+     */
     public static void exec(Reader r) throws IOException {
         BufferedReader stdin = new BufferedReader(r);
         NestedReader reader = new NestedReader(stdin);
@@ -39,8 +38,13 @@ public class JavaREPL {
             if(readStr.startsWith("print") && readStr.endsWith(";")){
                 int index = readStr.lastIndexOf(";");
                 String printStat = readStr.substring(0, index);
-                String printStatement = "System.out.println(" + printStat.substring("print ".length()) + ");";
+                int length = "print ".length();
+                String printStatement = "System.out.println(" + printStat.substring(length) + ");";
                 readStr = printStatement;
+            }
+            else if(readStr.startsWith("print")){
+                int length = "print ".length();
+                readStr = "System.out.println(" + readStr.substring(length) + ");";
             }
             if(readStr.equals(""))
                 continue;
@@ -68,6 +72,11 @@ public class JavaREPL {
             String errorCompile = compileCode(fileName, "compile");
             if(errorCompile != null){
                 System.err.print(errorCompile);
+                if(classNumber > 0)
+                    code = getCode(nameClass, " extends ", superClass, "", "");
+                else
+                    code = getCode(nameClass, "", "", "", "");
+                writeToFile(fileName, code);
             }
             else{
                 exec(nameClass);
@@ -76,6 +85,9 @@ public class JavaREPL {
         }
     }
 
+    /*
+        This method provides the class definition for each statement
+     */
     public static String getCode(String nameClass, String extend, String superClass, String definition, String statement)
     {
         String javaCode = "import java.io.*;\n" + "import java.util.*;\n"+
@@ -85,18 +97,10 @@ public class JavaREPL {
         return javaCode;
     }
 
-    public static String errorMessage(HandlingCompilerOperations hc, String fileName) throws IOException {
-        StringBuilder sbuf = new StringBuilder(100);
-        if(hc.dg.getDiagnostics().size() == 0)
-            return null;
-        List<Diagnostic> al = hc.dg.getDiagnostics();
-        for(Diagnostic d: al){
-            sbuf.append("line ").append(d.getLineNumber()).append(": ").append(d.getMessage(Locale.ENGLISH)).append("\n");
-        }
-
-        return sbuf.toString();
-    }
-
+    /*
+        This method compiles or parses the java code and returns the error message
+        Initial lines (Lines 1 - 6) of code in this method is taken from: http://www.javabeat.net/the-java-6-0-compiler-api/
+     */
     public static String compileCode(String fileName, String option) throws IOException{
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector diagnosticsCollector = new DiagnosticCollector();
@@ -106,15 +110,24 @@ public class JavaREPL {
         String classPath = "." + ";" + tempDir;
         Iterable<String> options = Arrays.asList("-d", tempDir, "-cp", classPath);
         JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnosticsCollector, options, null, fileObjects);
-        HandlingCompilerOperations hc = new HandlingCompilerOperations(diagnosticsCollector, task);
         if(option.equals("parse"))
-            hc.javaTask.parse();
+            task.parse();
         else
-            hc.javaTask.call();
+            task.call();
+        StringBuilder sbuf = new StringBuilder(100);
+        if(diagnosticsCollector.getDiagnostics().size() == 0)
+            return null;
+        List<Diagnostic> al = diagnosticsCollector.getDiagnostics();
+        for(Diagnostic d: al){
+            sbuf.append("line ").append(d.getLineNumber()).append(": ").append(d.getMessage(Locale.ENGLISH)).append("\n");
+        }
 
-        return errorMessage(hc, fileName);
+        return sbuf.toString();
     }
 
+    /*
+        This method writes the class definition in a java file stored in the temporary directory
+     */
     public static void writeToFile(String fileName, String code){
         String dirFile = tempDir + File.separator + fileName;
         try(BufferedWriter bufWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dirFile))))
@@ -125,6 +138,10 @@ public class JavaREPL {
         }
     }
 
+    /*
+        This method invokes the exec() method of each class file created
+        Initial Lines of code (Lines 1 - 4) in this method were taken from http://tutorials.jenkov.com/java-reflection/dynamic-class-loading-reloading.html
+     */
     public static void exec(String nameClass) {
         try{
             ClassLoader parentClassLoading = ClassLoader.getSystemClassLoader();
