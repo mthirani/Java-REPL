@@ -119,7 +119,7 @@ public class JavaREPL {
             return null;
         List<Diagnostic> al = diagnosticsCollector.getDiagnostics();
         for(Diagnostic d: al){
-            sbuf.append("line ").append(d.getLineNumber()).append(": ").append(d.getMessage(Locale.ENGLISH)).append("\r\n");
+            sbuf.append("line ").append(d.getLineNumber()).append(": ").append(d.getMessage(Locale.ENGLISH)).append("\n");
         }
 
         return sbuf.toString();
