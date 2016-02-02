@@ -91,7 +91,7 @@ public class JavaREPL {
     public static String getCode(String nameClass, String extend, String superClass, String definition, String statement)
     {
         String javaCode = "import java.io.*;\n" + "import java.util.*;\n"+
-                "public class " + nameClass + extend + superClass + "{\n" + definition + "\n" +
+                "public class " + nameClass + extend + superClass + "\n{\n" + definition + "\n" +
                 "public static void exec() {\n" + statement + "\n" + "}\n" + "}\n";
 
         return javaCode;
@@ -107,7 +107,7 @@ public class JavaREPL {
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnosticsCollector, null, null);
         String dirFile = tempDir + File.separator + fileName;
         Iterable fileObjects = fileManager.getJavaFileObjectsFromStrings(Arrays.asList(dirFile));
-        String classPath = "." + ";" + tempDir;
+        String classPath = "." + System.getProperty("path.separator") + tempDir;
         Iterable<String> options = Arrays.asList("-d", tempDir, "-cp", classPath);
         JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnosticsCollector, options, null, fileObjects);
         if(option.equals("parse"))
