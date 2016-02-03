@@ -13,6 +13,7 @@ import java.util.Locale;
 public class JavaREPL {
 
     public static final String tempDir = System.getProperty("java.io.tmpdir");
+    public static ClassLoader classLoader;
 
     /*
         This is the main method
@@ -79,8 +80,9 @@ public class JavaREPL {
                 writeToFile(fileName, code);
             }
             else{
-                exec(nameClass);
+                exec(nameClass, classNumber);
             }
+            //System.out.println("Code is: \n" + code);
             classNumber++;
         }
     }
@@ -142,11 +144,12 @@ public class JavaREPL {
         This method invokes the exec() method of each class file created
         Initial Lines of code (Lines 1 - 4) in this method were taken from http://tutorials.jenkov.com/java-reflection/dynamic-class-loading-reloading.html
      */
-    public static void exec(String nameClass) {
+    public static void exec(String nameClass, int classNum) {
         try{
             ClassLoader parentClassLoading = ClassLoader.getSystemClassLoader();
             URL url = new File(tempDir).toURI().toURL();
-            ClassLoader classLoader = new URLClassLoader(new URL[] {url}, parentClassLoading);
+            if(classNum == 0)
+                classLoader = new URLClassLoader(new URL[] {url}, parentClassLoading);  //should be one only; instead of creating class loader everytime
             Class actualClass = classLoader.loadClass(nameClass);
             Method decMeth = actualClass.getDeclaredMethod("exec", (Class[])null);
             decMeth.invoke(null, (Object[]) null);
