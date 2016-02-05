@@ -14,7 +14,7 @@ public class JavaREPL {
 
     public static final String tempDir = System.getProperty("java.io.tmpdir");
     public static ClassLoader classLoader;
-    public static ClassLoader parentClassLoading;
+
     /*
         This is the main method
      */
@@ -147,12 +147,11 @@ public class JavaREPL {
     public static void exec(String nameClass, int classNum) {
         try{
             if(classNum == 0){
-                parentClassLoading = ClassLoader.getSystemClassLoader();
+                ClassLoader parentClassLoading = ClassLoader.getSystemClassLoader();
                 URL url = new File(tempDir).toURI().toURL();
                 classLoader = new URLClassLoader(new URL[] {url}, parentClassLoading);  //should be one only; instead of creating class loader everytime
             }
             Class actualClass = classLoader.loadClass(nameClass);
-            System.out.println(actualClass);
             Method decMeth = actualClass.getDeclaredMethod("exec", (Class[])null);
             decMeth.invoke(null, (Object[]) null);
         }catch(Exception e){
